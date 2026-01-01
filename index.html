@@ -3,39 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telugu Panchangam Expert | Executive Edition</title>
-  <meta name="description" content="WCAG 2.2 AA compliant Vedic Panchangam calculator with high-impact executive branding and interactive features.">
+  <title>Global Vedic Panchang | Multi-Language Edition</title>
+  <meta name="description" content="WCAG 2.2 AA compliant Vedic Panchangam calculator supporting Telugu, Tamil, and Hindi traditions. Precision astral timings and spiritual insights.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Noto+Sans+Telugu:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --focus-ring: #00f2ff;
     }
     body {
-      font-family: 'Space Grotesk', 'Noto Sans Telugu', sans-serif;
+      font-family: 'Space Grotesk', 'Noto Sans Telugu', 'Noto Sans Tamil', 'Noto Sans Devanagari', sans-serif;
       overflow-x: hidden;
       transition: background-color 0.3s ease, color 0.3s ease;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
-    /* Skip Link styling */
     .skip-link {
       position: absolute;
-      top: -40px;
+      top: -60px;
       left: 0;
       background: #00f2ff;
       color: #000;
-      padding: 8px;
+      padding: 12px 24px;
+      font-weight: 900;
       z-index: 1000;
       transition: top 0.2s;
+      border-radius: 0 0 12px 0;
     }
     .skip-link:focus {
       top: 0;
     }
-    /* High contrast focus indicators */
     *:focus-visible {
-      outline: 3px solid var(--focus-ring);
-      outline-offset: 2px;
+      outline: 4px solid var(--focus-ring);
+      outline-offset: 4px;
     }
-    /* Patterned backgrounds for color-blind accessibility */
     .pattern-dots {
       background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 0);
       background-size: 10px 10px;
@@ -43,26 +46,32 @@
     .pattern-stripes {
       background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px);
     }
-    /* Neon Glows */
-    .neon-glow {
-      box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
-    }
-    .text-glow {
-      text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
-    }
-    /* Executive Technique: Sharp Double Offset Shadows (formerly firing squad) */
     .executive-glow-text {
       color: black !important;
       font-weight: 900;
       text-shadow: 
         -2px -2px 0px #e67e22, 
-        2px 2px 0px #3498db;
+        2px 2px 0px #3498db,
+        0 0 1px rgba(0,0,0,0.5);
+      padding-right: 6px;
     }
     [data-theme="highContrast"] .executive-glow-text {
       color: white !important;
       text-shadow: 
         -2px -2px 0px #ffff00, 
         2px 2px 0px #00ffff;
+    }
+    .text-balance { text-wrap: balance; }
+    .text-pretty { text-wrap: pretty; }
+    p, span, h1, h2, h3 {
+      line-height: 1.6 !important;
+      letter-spacing: 0.01em;
+    }
+    .telugu-robust {
+      white-space: normal;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      min-width: 0;
     }
   </style>
   <script type="importmap">

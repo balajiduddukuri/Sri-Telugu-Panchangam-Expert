@@ -1,32 +1,38 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { PanchangData } from "../types";
+import { PanchangData, AppLanguage, PanchangRegion } from "../types";
 
-export async function fetchPanchangData(date: string, location: string): Promise<PanchangData> {
+export async function fetchPanchangData(
+  date: string, 
+  location: string, 
+  language: AppLanguage,
+  region: PanchangRegion,
+  coords?: { lat: number; lng: number }
+): Promise<PanchangData> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Role: Supreme Authority on Telugu Panchangam & Vedic Jyotish.
-    Stakeholder: Balu (EPAM PM, Gita Practitioner).
+    Role: Supreme Authority on Vedic Panchangam & Jyotish (covering Telugu, Tamil, and North Indian traditions).
     Context: Deliver production-ready precision for ${date} at ${location}.
+    Language requested: ${language}.
+    Calendar Tradition: ${region === 'tamilnadu' ? 'Tamil Solar Calendar (Vakya/Thirukanitha)' : region === 'north' ? 'Purnimanta Vikram Samvat' : 'Amanta Shalivahana Saka (Telugu/Kannada)'}.
     
     CRITICAL VEDIC FORMULAS:
-    1. Sunrise/Sunset: Accurate to the second for ${location}.
-    2. Sandhya Timings: 
-       - Pratah Sandhya (Sunrise +/- 24 mins)
-       - Madhyahna Sandhya (Noon +/- 24 mins)
-       - Sayam Sandhya (Sunset +/- 24 mins)
-    3. Divisions: Rahu Kalam, Yamagandam, Gulika based on weekday 8-part divisions.
-    4. Muhurtas: Abhijit (8th Muhurta), Brahma Muhurta (Starts 96 mins before sunrise).
-    5. Amrita Kalam/Varjyam: Calculate based on Nakshatra duration.
+    1. Sunrise/Sunset: Accurate for ${location}.
+    2. Sandhya Timings, Rahu Kalam, Yamagandam, Gulika.
+    3. Muhurtas: Abhijit, Brahma Muhurta.
+    4. Region-Specific Details:
+       - If Tamil: Include Tamil Month (Chithirai, etc.), Year name (Vihari, etc.), and Tithi/Nakshatra in Tamil.
+       - If North Indian: Include Hindi Month, Vikram Samvat, and Paksha details in Hindi.
+       - If Telugu: Standard Amanta Maasam.
     
     OUTPUT REQUIREMENTS:
-    - Bilingual Telugu/English.
-    - One 'Balu's Gita Verse' relevant to the day's planetary alignment.
-    - Lucky color and one-line professional/spiritual guidance.
+    - Primary field "nameTe" in the schema should be used for the regional language (${language}) name of the timing.
+    - Basic details must include regional Month (maasam) and Era (samvat).
+    - Provide a concise spiritual tone summary and a Gita-inspired guidance.
     
     JSON SCHEMA ENFORCEMENT:
-    Return strictly JSON. Ensure "time" field is strictly "HH:MM AM/PM - HH:MM AM/PM".
+    Return strictly JSON.
   `;
 
   try {
@@ -39,8 +45,6 @@ export async function fetchPanchangData(date: string, location: string): Promise
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            date: { type: Type.STRING },
-            location: { type: Type.STRING },
             basicDetails: {
               type: Type.OBJECT,
               properties: {
@@ -51,8 +55,11 @@ export async function fetchPanchangData(date: string, location: string): Promise
                 yoga: { type: Type.STRING },
                 karana: { type: Type.STRING },
                 rahu: { type: Type.STRING },
-                samvat: { type: Type.STRING }
-              }
+                samvat: { type: Type.STRING },
+                maasam: { type: Type.STRING },
+                varam: { type: Type.STRING }
+              },
+              required: ["sunrise", "sunset", "tithi", "maasam"]
             },
             inauspiciousTimings: {
               type: Type.ARRAY,
@@ -62,7 +69,7 @@ export async function fetchPanchangData(date: string, location: string): Promise
                   nameEn: { type: Type.STRING },
                   nameTe: { type: Type.STRING },
                   time: { type: Type.STRING },
-                  status: { type: Type.STRING, enum: ['inauspicious'] }
+                  status: { type: Type.STRING }
                 }
               }
             },
@@ -74,14 +81,14 @@ export async function fetchPanchangData(date: string, location: string): Promise
                   nameEn: { type: Type.STRING },
                   nameTe: { type: Type.STRING },
                   time: { type: Type.STRING },
-                  status: { type: Type.STRING, enum: ['auspicious'] }
+                  status: { type: Type.STRING }
                 }
               }
             },
             horoscope: { type: Type.STRING },
+            spiritualSummary: { type: Type.STRING },
             luckyColor: { type: Type.STRING }
-          },
-          required: ["basicDetails", "inauspiciousTimings", "auspiciousTimings", "horoscope", "luckyColor"]
+          }
         }
       }
     });
@@ -93,35 +100,18 @@ export async function fetchPanchangData(date: string, location: string): Promise
       title: chunk.web?.title || 'Vedic Authority Source'
     })).filter((s: any) => s.uri !== '');
 
-    return { ...parsed, sources };
+    return { ...parsed, date, location, sources };
   } catch (error) {
     console.error("Gemini Panchang Error:", error);
-    throw new Error("Failed to compute Vedic timings. Celestial alignment unreachable.");
+    throw new Error("Astral signal error. Could not align regional calendar.");
   }
 }
 
 export async function fetchMonthHighlights(year: number, month: number, location: string): Promise<Record<string, 'auspicious' | 'inauspicious' | 'neutral'>> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const monthName = new Date(year, month).toLocaleString('en-US', { month: 'long' });
-  
-  const prompt = `
-    Analyze the Vedic Panchang for the entire month of ${monthName} ${year} in ${location}.
-    For each day of the month, determine if the day is generally 'auspicious' (e.g., has powerful Subha Muhurtas, favorable Tithi/Nakshatra for work), 'inauspicious' (e.g., Amavasya, heavy Rahu influence, bad Yoga), or 'neutral'.
-    
-    Return a JSON object where keys are the date in "YYYY-MM-DD" format and values are one of: "auspicious", "inauspicious", "neutral".
-  `;
-
+  const prompt = `Analyze Vedic Panchang for ${month}/${year} at ${location}. Return JSON format with "YYYY-MM-DD": "auspicious|inauspicious|neutral" mapping.`;
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
-    });
+    const response = await ai.models.generateContent({ model: "gemini-3-flash-preview", contents: prompt, config: { responseMimeType: "application/json" } });
     return JSON.parse(response.text);
-  } catch (error) {
-    console.error("Month fetch error:", error);
-    return {};
-  }
+  } catch { return {}; }
 }
