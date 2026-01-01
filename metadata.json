@@ -1,0 +1,7 @@
+{
+  "name": "Sri Telugu Panchangam Expert",
+  "description": "Premium WCAG 2.2 AA compliant Vedic Panchangam by BalajiDuddukuri. Features real-time muhurta tracking, Gita insights, and precision astronomical timings.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
